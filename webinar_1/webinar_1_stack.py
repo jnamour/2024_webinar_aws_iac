@@ -9,7 +9,6 @@ from aws_cdk import (
 import boto3
 
 
-
 class Webinar1Stack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -36,15 +35,32 @@ class Webinar1Stack(Stack):
 
 
         # crear role IAM para acceso de lambda a S3
+        iamRoleForLambdas = iam.Role(self, id= "IamRoleForLambdas",
+                                     assumed_by= iam.ServicePrincipal(service="lambda.amazonaws.com"),
+                                     role_name= "IamRoleForLambdas")
+        iamRoleForLambdas.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess"))
+        
 
-        # crear función lambda 1
+        # crear función lambda test
         my_lambda = _lambda.Function(
-            self, 'HelloHandler',
+            self, id= 'HelloHandler',
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset('lambda'),
             handler='hello.handler',
         )
 
-        # crear función lambda 2
+        # crear función lambda 1 (bronze a silver)
+        lambdaBronzeASilver = _lambda.Function(
+            self, id= 'bronzeASilver', function_name= "bronze_a_silver",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            code=_lambda.Code.from_asset('lambda'),
+            handler='bronze_a_silver.handler',
+            role= iamRoleForLambdas
+        )
+
+        pandasLayer = _lambda.LayerVersion(self, id="pandasLayer",
+                                           code= _lambda.Code.from_asset
+                                           )
+
 
         # crear API gatewy con métodos correspondientes
