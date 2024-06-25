@@ -18,14 +18,12 @@ class Webinar1Stack(Stack):
         bucket = s3.Bucket(self, id='MyBucket',
                            bucket_name= 'mybucketwebinar1',
                            )
-        # crear directorios en instancia S3
-        # Initialize a session using Amazon S3
+        # crear directorios en instancia S3        
         s3Instance = boto3.resource('s3')
-        # Define the bucket name
+        # crear bucket
         bucketName = "mybucketwebinar1"
-        # Create the bucket object
         mybucket = s3Instance.Bucket(bucketName)
-        # Create the folders (prefixes)
+        # crear carpetas
         folders = ['bronze/', 'silver/', 'gold/']
         for folder in folders:
             mybucket.put_object(Bucket=bucketName, Key=folder)
@@ -49,18 +47,28 @@ class Webinar1Stack(Stack):
             handler='hello.handler',
         )
 
-        # crear función lambda 1 (bronze a silver)
+        # crear función lambda bronze a silver
         lambdaBronzeASilver = _lambda.Function(
             self, id= 'bronzeASilver', function_name= "bronze_a_silver",
             runtime=_lambda.Runtime.PYTHON_3_12,
             code=_lambda.Code.from_asset('lambda'),
-            handler='bronze_a_silver.handler',
+            handler='bronze_a_silver.lambda_handler',
+            timeout= Duration.seconds(20),
             role= iamRoleForLambdas
         )
 
-        pandasLayer = _lambda.LayerVersion(self, id="pandasLayer",
-                                           code= _lambda.Code.from_asset
-                                           )
+        # crear función lambda silver a gold
+        # crear función lambda 1 (bronze a silver)
+        lambdaSilverAGold = _lambda.Function(
+            self, id= 'silverAGold', function_name= "silver_a_gold",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            code=_lambda.Code.from_asset('lambda'),
+            handler='silver_a_gold.lambda_handler',
+            timeout= Duration.seconds(20),
+            role= iamRoleForLambdas
+        )
+        
+        # agregar layer con arn
+        lambdaSilverAGold.add_layers(_lambda.LayerVersion.from_layer_version_arn(self, "pandasLayer", "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python312:8"))
 
-
-        # crear API gatewy con métodos correspondientes
+        # crear API gateway con métodos correspondientes

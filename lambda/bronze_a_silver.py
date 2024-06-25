@@ -6,8 +6,6 @@ import pandas as pd
 def lambda_handler(event, context):
     print("event: ", event)
     bucket_name = event["bucket"]
-    text1 = event["text"]
-    s3_path_1 = event["file_name"]
     bronzeFolder = event["bronzeFolder"]
     silverFolder = event["silverFolder"]
 
